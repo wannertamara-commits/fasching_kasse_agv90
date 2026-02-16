@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Vereinskasse Fasching</title>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background:#f2f2f7;
+    margin:0;
+    padding:10px;
+}
+
+h1 {
+    text-align:center;
+    font-size:22px;
+    margin:8px 0 12px 0;
+}
+
+.display {
+    background:white;
+    border-radius:16px;
+    padding:12px;
+    margin-bottom:12px;
+    font-size:16px;
+    text-align:center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.total {
+    font-size:30px;
+    font-weight:bold;
+}
+
+.container {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.grid {
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap:10px;
+}
+
+button {
+    padding:16px 6px;
+    font-size:16px;
+    border-radius:16px;
+    border:none;
+    color:white;
+    line-height:1.2;
+}
+
+.food { background:#ff9500; }
+.drink { background:#007aff; }
+.pfand { background:#af52de; }
+.money { background:#34c759; }
+.coin { background:#30b0c7; }
+.reset { background:#ff3b30; width:100%; font-size:18px; }
+
+.list {
+    background:white;
+    border-radius:16px;
+    padding:10px;
+    font-size:15px;
+    max-height:180px;
+    overflow:auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+h2 {
+    font-size:18px;
+    margin:6px 0;
+    text-align:center;
+}
+
+@media (min-width: 700px) {
+    .container { flex-direction:row; }
+    .left { flex:2; }
+    .right { flex:1; }
+}
+</style>
+</head>
+<body>
+
+<h1>🎭 Vereinskasse</h1>
+
+<div class="display">
+    Gesamt: <span class="total" id="total">0.00</span> €<br>
+    Gegeben: <span id="given">0.00</span> €<br>
+    Rückgeld: <span class="total" id="change">0.00</span> €
+</div>
+
+<div class="container">
+
+<div class="left">
+<div class="grid">
+    <button class="food" onclick="add('Rote',3.5)">Rote<br>3,50 €</button>
+    <button class="food" onclick="add('Thüringer',3.5)">Thüringer<br>3,50 €</button>
+    <button class="food" onclick="add('Veggy',3.5)">Veggy<br>3,50 €</button>
+
+    <button class="drink" onclick="add('Sprudel',2.5)">Sprudel<br>2,50 €</button>
+    <button class="drink" onclick="add('Spezi / Saftschorle',3)">Spezi / Saftschorle<br>3,00 €</button>
+    <button class="drink" onclick="add('Bier / Radler / alkoholfrei',3.5)">Bier / Radler / AF<br>3,50 €</button>
+    <button class="drink" onclick="add('Glühwein',3.5)">Glühwein<br>3,50 €</button>
+    <button class="drink" onclick="add('Cola / Fanta',2.5)">Cola / Fanta<br>2,50 €</button>
+    <button class="drink" onclick="add('Glas Sekt',3)">Glas Sekt<br>3,00 €</button>
+    <button class="drink" onclick="add('Fruchtsecco',3.5)">Fruchtsecco<br>3,50 €</button>
+    <button class="drink" onclick="add('Weißweinschorle',3.5)">Weißwein-<br>schorle 3,50 €</button>
+    <button class="drink" onclick="add('Flasche Sekt',18)">Flasche Sekt<br>18,00 €</button>
+    <button class="pfand" onclick="add('Pfand',2)">Pfand<br>2,00 €</button>
+</div>
+
+<h2>💶 Gegeben</h2>
+<div class="grid">
+    <button class="coin" onclick="give(0.1)">+0,10</button>
+    <button class="coin" onclick="give(0.2)">+0,20</button>
+    <button class="coin" onclick="give(0.5)">+0,50</button>
+    <button class="money" onclick="give(1)">+1</button>
+    <button class="money" onclick="give(2)">+2</button>
+    <button class="money" onclick="give(5)">+5</button>
+    <button class="money" onclick="give(10)">+10</button>
+    <button class="money" onclick="give(20)">+20</button>
+    <button class="money" onclick="give(50)">+50</button>
+    <button class="money" onclick="give(100)">+100</button>
+</div>
+
+<div style="margin-top:10px;">
+    <button class="reset" onclick="resetAll()">Neue Bestellung</button>
+</div>
+</div>
+
+<div class="right list">
+    <strong>🧾 Auswahl</strong>
+    <ul id="items"></ul>
+</div>
+
+</div>
+
+<script>
+let total = 0;
+let given = 0;
+let items = {};
+
+function add(name, amount) {
+    total += amount;
+    items[name] = (items[name] || 0) + 1;
+    update();
+}
+
+function give(amount) {
+    given += amount;
+    update();
+}
+
+function update() {
+    document.getElementById("total").innerText = total.toFixed(2);
+    document.getElementById("given").innerText = given.toFixed(2);
+    let change = given - total;
+    document.getElementById("change").innerText = (change > 0 ? change : 0).toFixed(2);
+
+    let list = document.getElementById("items");
+    list.innerHTML = "";
+    for (let key in items) {
+        let li = document.createElement("li");
+        li.textContent = items[key] + " × " + key;
+        list.appendChild(li);
+    }
+}
+
+function resetAll() {
+    total = 0;
+    given = 0;
+    items = {};
+    update();
+}
+</script>
+
+</body>
+</html>
